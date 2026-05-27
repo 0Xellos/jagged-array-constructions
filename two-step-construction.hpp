@@ -4,7 +4,7 @@
 
 namespace two_step_construction {
 
-inline void construct_original(int n, const std::vector<int> & x, const std::vector<int> & y) {
+inline void constructOriginal(int n, const std::vector<int> & x, const std::vector<int> & y) {
     std::vector<std::pair<int, int>> T[1000];
     const int q = static_cast<int>(x.size());
     for (int i = 0; i < q; i++) {

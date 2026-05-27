@@ -68,7 +68,7 @@ template <typename T, int GROUP_WIDTH = 1024>
 }
 
 template <typename T, int GROUP_WIDTH = 1024>
-[[nodiscard]] inline JaggedArray<T> construct_custom(int n, const std::vector<int> & x, const std::vector<T> & y) {
+[[nodiscard]] inline JaggedArray<T> constructCustom(int n, const std::vector<int> & x, const std::vector<T> & y) {
     struct Group {
         std::vector<std::pair<int, T>> xy;
     };

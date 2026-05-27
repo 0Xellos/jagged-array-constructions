@@ -1,6 +1,7 @@
 #include <random>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/benchmark/catch_benchmark.hpp>
+#include <catch2/catch_get_random_seed.hpp>
 #include "flat-two-step-construction.hpp"
 #include "flat-vector.hpp"
 #include "nested-vector.hpp"
@@ -12,60 +13,75 @@ namespace {
 
 using DataT = std::int32_t;
 
-TEST_CASE("Benchmark jagged array constructions") {
-    constexpr int N = 1'000'000;
-    constexpr int Q = 100'000'000;
+struct JaggedArrayConstructionInput {
+    int n;
+    std::vector<int> x;
+    std::vector<DataT> y;
+};
 
-    std::mt19937 rng(123);
+JaggedArrayConstructionInput makeInput(const int n, const int q) {
+    std::vector<int> x;
+    std::vector<DataT> y;
+    x.reserve(q);
+    y.reserve(q);
 
-    std::vector<int> x(Q);
-    std::vector<DataT> y(Q);
-    for (int i = 0; i < Q; i++) {
-        x[i] = rng() % N;
-        y[i] = rng();
+    std::mt19937 rng(Catch::getSeed());
+    std::uniform_int_distribution<int> x_distribution(0, n - 1);
+    std::uniform_int_distribution<DataT> y_distribution;
+    for (int i = 0; i < q; i++) {
+        x.push_back(x_distribution(rng));
+        y.push_back(y_distribution(rng));
     }
 
-    SECTION("Nested vector", "[benchmark][nested][onestep]") {
-        BENCHMARK("Nested vector") {
-            auto ret = nested_vector::construct<DataT>(N, x, y);
-        };
-    }
+    return {.n = n, .x = std::move(x), .y = std::move(y)};
+}
 
-    SECTION("Flat vector", "[benchmark][flat][onestep]") {
-        BENCHMARK("Flat vector") {
-            auto ret = flat_vector::construct<DataT>(N, x, y);
-        };
-    }
+TEST_CASE("Jagged array constructions using baseline nested vector", "[benchmark][nested][onestep]") {
+    const auto [n, x, y] = makeInput(1'000'000, 100'000'000);
 
-    SECTION("Two-step (with nested vector)", "[benchmark][nested][twostep]") {
-        BENCHMARK("Two-step (with nested vector), original") {
-            two_step_construction::construct_original(N, x, y);
-        };
+    BENCHMARK("Nested vector") {
+        return nested_vector::construct<DataT>(n, x, y);
+    };
+}
 
-        BENCHMARK("Two-step (with nested vector), variation with split x, y") {
-            auto ret = two_step_construction_split_inputs::construct<DataT>(N, x, y);
-        };
+TEST_CASE("Jagged array constructions using flat vector", "[benchmark][flat][onestep]") {
+    const auto [n, x, y] = makeInput(1'000'000, 100'000'000);
 
-        BENCHMARK("Two-step (with nested vector), variation with zipped x, y") {
-            auto ret = two_step_construction::construct<DataT>(N, x, y);
-        };
-    }
+    BENCHMARK("Flat vector") {
+        return flat_vector::construct<DataT>(n, x, y);
+    };
+}
 
-    SECTION("Two-step (with flat vector)", "[benchmark][flat][twostep]") {
-        BENCHMARK("Two-step (with flat vector)") {
-            auto ret = flat_two_step_construction::construct<DataT>(N, x, y);
-        };
+TEST_CASE("Jagged array constructions using two-step method (with nested vector)", "[benchmark][nested][twostep]") {
+    const auto [n, x, y] = makeInput(1'000'000, 100'000'000);
 
-        BENCHMARK("Two-step (with flat vector), uses custom code for flat groups") {
-            auto ret = flat_two_step_construction::construct_custom<DataT>(N, x, y);
-        };
-    }
+    BENCHMARK("Two-step with nested vector, original") {
+        return two_step_construction::constructOriginal(n, x, y);
+    };
 
-    SECTION("Two-step (with flat result vector only)", "[benchmark][flat][twostep]") {
-        BENCHMARK("Two-step (with flat result vector only)") {
-            auto ret = flat_result_two_step_construction::construct<DataT>(N, x, y);
-        };
-    }
+    BENCHMARK("Two-step with nested vector, variation with split x, y") {
+        return two_step_construction_split_inputs::construct<DataT>(n, x, y);
+    };
+
+    BENCHMARK("Two-step with nested vector, variation with zipped x, y") {
+        return two_step_construction::construct<DataT>(n, x, y);
+    };
+}
+
+TEST_CASE("Jagged array constructions using two-step method (with flat vector)", "[benchmark][flat][twostep]") {
+    const auto [n, x, y] = makeInput(1'000'000, 100'000'000);
+
+    BENCHMARK("Two-step with flat vector") {
+        return flat_two_step_construction::construct<DataT>(n, x, y);
+    };
+
+    BENCHMARK("Two-step with flat vector, uses custom code for flat groups") {
+        return flat_two_step_construction::constructCustom<DataT>(n, x, y);
+    };
+
+    BENCHMARK("Two-step with flat result vector only") {
+        return flat_result_two_step_construction::construct<DataT>(n, x, y);
+    };
 }
 
 }
