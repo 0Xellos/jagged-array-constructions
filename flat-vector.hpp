@@ -5,7 +5,7 @@
 namespace flat_vector {
 
 template <typename T>
-struct JaggedArray {
+class JaggedArray {
     std::vector<int> sizes, offsets;
     std::vector<T> storage;
     std::vector<T *> view_as_nested, current_ends;
@@ -13,7 +13,7 @@ struct JaggedArray {
 public:
     JaggedArray(int n, const std::vector<int> & indices) : sizes(n, 0), offsets{0} {
         for (const auto x : indices) { sizes[x]++; }
-        offsets.reserve(n+1);
+        offsets.reserve(n + 1);
         for (int i = 0; i < n; i++) {
             offsets.push_back(offsets[i] + sizes[i]);
         }
@@ -27,6 +27,11 @@ public:
 
     void push_back(int x, const T & y) {
         *(current_ends[x]) = y;
+        ++current_ends[x];
+    }
+
+    void emplace_back(int x, T && y) {
+        *(current_ends[x]) = std::move(y);
         ++current_ends[x];
     }
 
