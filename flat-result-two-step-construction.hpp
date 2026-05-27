@@ -36,7 +36,7 @@ public:
     }
 };
 
-template <typename T, int GROUP_WIDTH = 1024>
+template <typename T, int GROUP_WIDTH = 1000>
 [[nodiscard]] inline JaggedArray<T> construct(int n, const std::vector<int> & x, const std::vector<T> & y) {
     struct Group {
         std::vector<std::pair<int, T>> xy;

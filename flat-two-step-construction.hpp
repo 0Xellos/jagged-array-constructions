@@ -47,7 +47,7 @@ public:
     }
 };
 
-template <typename T, int GROUP_WIDTH = 1024>
+template <typename T, int GROUP_WIDTH = 1000>
 [[nodiscard]] inline JaggedArray<T> construct(int n, const std::vector<int> & x, const std::vector<T> & y) {
     const int groups_count = (n - 1) / GROUP_WIDTH + 1;
 
@@ -67,7 +67,7 @@ template <typename T, int GROUP_WIDTH = 1024>
     return result;
 }
 
-template <typename T, int GROUP_WIDTH = 1024>
+template <typename T, int GROUP_WIDTH = 1000>
 [[nodiscard]] inline JaggedArray<T> constructCustom(int n, const std::vector<int> & x, const std::vector<T> & y) {
     struct Group {
         std::vector<std::pair<int, T>> xy;
